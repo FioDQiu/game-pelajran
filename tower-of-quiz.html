@@ -94,9 +94,151 @@
     <div id="toastContainer" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none w-11/12 max-w-md"></div>
 
     <!-- ===================================================================== -->
-    <!-- VIEW 1: LANDING SCREEN (PILIH PERAN GURU / SISWA / DEMO)             -->
+    <!-- VIEW 0: HOME PAGE PORTAL (PILIH 4 GAME ICE BREAKING)                  -->
     <!-- ===================================================================== -->
-    <section id="viewLanding" class="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden">
+    <section id="viewHome" class="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden">
+        <!-- Decorative Background Glows -->
+        <div class="absolute top-0 left-1/4 w-80 h-80 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute bottom-0 right-1/4 w-80 h-80 bg-fuchsia-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- Portal Header -->
+        <header class="text-center max-w-3xl mb-8 sm:mb-10 z-10">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-200 text-xs sm:text-sm font-bold mb-4 shadow-lg">
+                <span>🏫</span> Portal Game Edukasi &amp; Ice Breaking Kelas
+            </div>
+            <h1 class="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-pink-400 to-cyan-300 mb-3">
+                EduPlay Arena
+            </h1>
+            <p class="text-slate-300 text-sm sm:text-base lg:text-lg leading-relaxed">
+                Pilih permainan interaktif di bawah ini untuk mencairkan suasana belajar mengajar agar siswa kembali fokus, aktif, dan antusias!
+            </p>
+        </header>
+
+        <!-- 4-Game Selection Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 w-full max-w-7xl z-10">
+            <!-- GAME 1: TOWER OF QUIZ (ACTIVE) -->
+            <div class="bg-slate-900/90 backdrop-blur-xl border-2 border-amber-400/70 rounded-3xl p-6 shadow-2xl flex flex-col justify-between relative overflow-hidden group hover:-translate-y-1.5 transition-all duration-200">
+                <div class="absolute -right-6 -top-6 w-28 h-28 bg-amber-400/15 rounded-full blur-xl pointer-events-none"></div>
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-extrabold tracking-wide">
+                            ✓ SIAP DIMAINKAN
+                        </span>
+                        <span class="font-display font-bold text-slate-500 text-sm">#01</span>
+                    </div>
+
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-pink-500 flex items-center justify-center text-3xl shadow-lg mb-4 animate-float">
+                        🏰
+                    </div>
+
+                    <h2 class="text-2xl font-bold text-white mb-2 group-hover:text-amber-300 transition-colors">
+                        Tower of Quiz
+                    </h2>
+                    <p class="text-slate-300 text-xs sm:text-sm leading-relaxed mb-5">
+                        Panjat menara ala <i>Tower of Hell</i>! Jawab soal dari guru untuk mendapat <b>+2 Poin Lompatan</b>, dilengkapi <i>checkpoint</i>, tombol <i>respawn</i>, dan meme seru.
+                    </p>
+                </div>
+
+                <button onclick="openGame1TowerOfQuiz()" class="btn-3d w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-pink-500 hover:brightness-110 text-slate-950 font-display font-extrabold text-base shadow-[0_5px_0_#9a3412] flex items-center justify-center gap-2 cursor-pointer">
+                    <span>▶ Mainkan Sekarang</span>
+                </button>
+            </div>
+
+            <!-- GAME 2: SLOT KOSONG / SEGERA HADIR -->
+            <div class="bg-slate-900/50 backdrop-blur-md border-2 border-dashed border-slate-700/80 rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-400 text-xs font-bold">
+                            🔒 Segera Hadir
+                        </span>
+                        <span class="font-display font-bold text-slate-600 text-sm">#02</span>
+                    </div>
+
+                    <div class="w-16 h-16 rounded-2xl bg-slate-800/90 border border-slate-700 flex items-center justify-center text-3xl text-slate-500 mb-4">
+                        🎯
+                    </div>
+
+                    <h2 class="text-xl font-bold text-slate-300 mb-2">
+                        Game 2 — Slot Kosong
+                    </h2>
+                    <p class="text-slate-500 text-xs sm:text-sm leading-relaxed mb-5">
+                        Dalam tahap perencanaan. Nantikan keseruan game edukasi kedua di slot ini!
+                    </p>
+                </div>
+
+                <button disabled class="w-full py-3.5 px-4 rounded-2xl bg-slate-800/70 border border-slate-700/70 text-slate-500 font-display font-bold text-sm cursor-not-allowed">
+                    Dalam Pengembangan
+                </button>
+            </div>
+
+            <!-- GAME 3: SLOT KOSONG / SEGERA HADIR -->
+            <div class="bg-slate-900/50 backdrop-blur-md border-2 border-dashed border-slate-700/80 rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-400 text-xs font-bold">
+                            🔒 Segera Hadir
+                        </span>
+                        <span class="font-display font-bold text-slate-600 text-sm">#03</span>
+                    </div>
+
+                    <div class="w-16 h-16 rounded-2xl bg-slate-800/90 border border-slate-700 flex items-center justify-center text-3xl text-slate-500 mb-4">
+                        🧩
+                    </div>
+
+                    <h2 class="text-xl font-bold text-slate-300 mb-2">
+                        Game 3 — Slot Kosong
+                    </h2>
+                    <p class="text-slate-500 text-xs sm:text-sm leading-relaxed mb-5">
+                        Dalam tahap perencanaan. Nantikan keseruan game edukasi ketiga di slot ini!
+                    </p>
+                </div>
+
+                <button disabled class="w-full py-3.5 px-4 rounded-2xl bg-slate-800/70 border border-slate-700/70 text-slate-500 font-display font-bold text-sm cursor-not-allowed">
+                    Dalam Pengembangan
+                </button>
+            </div>
+
+            <!-- GAME 4: SLOT KOSONG / SEGERA HADIR -->
+            <div class="bg-slate-900/50 backdrop-blur-md border-2 border-dashed border-slate-700/80 rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-400 text-xs font-bold">
+                            🔒 Segera Hadir
+                        </span>
+                        <span class="font-display font-bold text-slate-600 text-sm">#04</span>
+                    </div>
+
+                    <div class="w-16 h-16 rounded-2xl bg-slate-800/90 border border-slate-700 flex items-center justify-center text-3xl text-slate-500 mb-4">
+                        🚀
+                    </div>
+
+                    <h2 class="text-xl font-bold text-slate-300 mb-2">
+                        Game 4 — Slot Kosong
+                    </h2>
+                    <p class="text-slate-500 text-xs sm:text-sm leading-relaxed mb-5">
+                        Dalam tahap perencanaan. Nantikan keseruan game edukasi keempat di slot ini!
+                    </p>
+                </div>
+
+                <button disabled class="w-full py-3.5 px-4 rounded-2xl bg-slate-800/70 border border-slate-700/70 text-slate-500 font-display font-bold text-sm cursor-not-allowed">
+                    Dalam Pengembangan
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 1: TOWER OF QUIZ LOBBY (PILIH PERAN GURU / SISWA / DEMO)         -->
+    <!-- ===================================================================== -->
+    <section id="viewLanding" class="hidden flex-1 flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden">
+        <!-- Tombol Kembali ke Home Portal (Pojok Kiri Atas) -->
+        <div class="w-full max-w-4xl flex items-center justify-between mb-4 z-10">
+            <button onclick="backToHomePortal()" class="btn-3d px-4 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md cursor-pointer">
+                <span>← Kembali ke Menu Utama</span>
+            </button>
+            <span class="text-xs font-bold text-slate-400 hidden sm:inline">EduPlay Arena • Game #01</span>
+        </div>
+
         <!-- Decorative Background Orbs -->
         <div class="absolute top-10 left-10 w-64 h-64 bg-fuchsia-600/20 rounded-full blur-3xl pointer-events-none"></div>
         <div class="absolute bottom-10 right-10 w-72 h-72 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none"></div>
@@ -347,8 +489,8 @@
         <header class="relative z-20 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-3 sm:px-6 py-2.5 flex items-center justify-between gap-2 shadow-lg">
             <!-- Left: Exit & Room Code -->
             <div class="flex items-center gap-2 sm:gap-3">
-                <button onclick="leaveToLanding()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold cursor-pointer">
-                    ✕
+                <button onclick="leaveToLanding()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold cursor-pointer" title="Kembali ke Menu">
+                    ← Menu
                 </button>
                 <div class="hidden sm:block">
                     <span class="block text-[10px] uppercase text-slate-400 font-bold">Ruangan</span>
@@ -796,10 +938,25 @@
         }
 
         function switchView(viewId) {
-            ['viewLanding', 'viewTeacher', 'viewStudent'].forEach(id => {
+            ['viewHome', 'viewLanding', 'viewTeacher', 'viewStudent'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
             document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        function openGame1TowerOfQuiz() {
+            SoundFX.init();
+            switchView('viewLanding');
+        }
+
+        function backToHomePortal() {
+            if (syncInterval) clearInterval(syncInterval);
+            stopGameLoop();
+            currentRole = null;
+            currentRoomCode = null;
+            document.getElementById('endGameModal').classList.add('hidden');
+            document.getElementById('quizModal').classList.add('hidden');
+            switchView('viewHome');
         }
 
         function leaveToLanding() {
@@ -1950,52 +2107,6 @@
             div.textContent = str;
             return div.innerHTML;
         }
-
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tower of Quiz - Ice Breaking Game</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: #0f172a;
-      color: #f8fafc;
-      overflow-x: hidden;
-    }
-    h1, h2, h3, .font-game {
-      font-family: 'Fredoka', sans-serif;
-    }
-    @keyframes popIn {
-      0% { transform: scale(0.6) rotate(-4deg); opacity: 0; }
-      70% { transform: scale(1.06) rotate(2deg); opacity: 1; }
-      100% { transform: scale(1) rotate(0deg); opacity: 1; }
-    }
-    .animate-meme {
-      animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-    }
-  </style>
-</head>
-<body class="min-h-screen flex flex-col">
-
-  <!-- ==================== VIEW 1: LOBBY / PILIH PERAN ==================== -->
-  <div id="view-lobby" class="min-h-screen flex flex-col justify-between p-6 bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950">
-    <!-- Top Bar Navigasi ke index.html -->
-    <div class="max-w-5xl mx-auto w-full flex items-center justify-between">
-      <a href="index.html" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-200 text-sm font-semibold transition">
-        <span>←</span> Kembali ke Home
-      </a>
-      <span class="text-xs font-bold uppercase tracking-wider text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-full">
-        Game #01 • Tower of Quiz
-      </span>
-    </div>
-
-    <!-- Konten Utama Lobby -->
-    <div class="max-w-4xl mx-auto w-full my-auto py-8">
-      <div class="text-center mb-10">
-        <div class="text-6xl mb-3">🗼</div>
-        <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-amber-300 via-pink-400 to-indigo-400 bg-clip-text text-transparent">
     </script>
 </body>
 </html>
