@@ -1,0 +1,1955 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tower of Quiz — Ice Breaking Edukasi Interaktif</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka & Plus Jakarta Sans untuk nuansa game edukasi yang ceria & terbaca jelas -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-display: 'Fredoka', sans-serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
+        }
+        body {
+            font-family: var(--font-body);
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        h1, h2, h3, .font-display {
+            font-family: var(--font-display);
+        }
+
+        /* Custom Game Buttons & 3D Tactile Press Effect */
+        .btn-3d {
+            transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.1s ease;
+        }
+        .btn-3d:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0 0 rgba(0,0,0,0.4) !important;
+        }
+
+        /* Animations */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(2deg); }
+        }
+        .animate-float {
+            animation: floatSlow 3s ease-in-out infinite;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.7); opacity: 0; }
+            70% { transform: scale(1.06); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(244, 63, 94, 0.6), 0 4px 0 #9f1239; }
+            50% { box-shadow: 0 0 28px rgba(244, 63, 94, 0.95), 0 4px 0 #9f1239; }
+        }
+        .respawn-urgent {
+            animation: pulseGlow 1.1s infinite;
+        }
+
+        /* Custom Scrollbar for Teacher Panel */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        /* Canvas container */
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900">
+
+    <!-- ===================================================================== -->
+    <!-- TOAST / NOTIFICATION BANNER (Pengganti alert() yang ramah & modern)   -->
+    <!-- ===================================================================== -->
+    <div id="toastContainer" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none w-11/12 max-w-md"></div>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 1: LANDING SCREEN (PILIH PERAN GURU / SISWA / DEMO)             -->
+    <!-- ===================================================================== -->
+    <section id="viewLanding" class="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden">
+        <!-- Decorative Background Orbs -->
+        <div class="absolute top-10 left-10 w-64 h-64 bg-fuchsia-600/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute bottom-10 right-10 w-72 h-72 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- Header Badge -->
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-200 text-xs sm:text-sm font-semibold mb-4 shadow-lg">
+            <span>🎮</span> Seri Ice Breaking Kelas #1 • Edisi Tower of Hell
+        </div>
+
+        <!-- Main Title -->
+        <div class="text-center max-w-2xl mb-8">
+            <h1 class="text-4xl sm:text-6xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-pink-400 to-cyan-300 drop-shadow-sm mb-3 animate-float">
+                TOWER OF QUIZ
+            </h1>
+            <p class="text-slate-300 text-sm sm:text-lg leading-relaxed">
+                Jawab soal dari Guru untuk mengumpulkan <span class="text-amber-300 font-bold">Poin Lompatan</span>!
+                <span class="inline-block bg-slate-800/80 border border-slate-700 px-2 py-0.5 rounded-lg text-emerald-400 font-semibold text-xs sm:text-sm">1 Jawaban Benar = +2 Poin (2x Lompat)</span>
+            </p>
+        </div>
+
+        <!-- Role Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl z-10">
+            <!-- Card: Guru -->
+            <div class="bg-slate-900/80 backdrop-blur-xl border-2 border-indigo-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col justify-between hover:border-indigo-400 transition-all">
+                <div>
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-3xl shadow-lg mb-4">
+                        👩‍🏫
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">Saya Guru</h2>
+                    <p class="text-slate-400 text-sm sm:text-base mb-6">
+                        Buat ruangan baru dengan kode acak, atur durasi permainan, masukkan soal kuis sendiri, dan pantau posisi siswa secara langsung.
+                    </p>
+                </div>
+                <button onclick="createTeacherRoom()" class="btn-3d w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-display font-bold text-lg shadow-[0_5px_0_#3730a3] flex items-center justify-center gap-2 cursor-pointer">
+                    <span>✨ Buat Ruangan Baru</span>
+                </button>
+            </div>
+
+            <!-- Card: Siswa -->
+            <div class="bg-slate-900/80 backdrop-blur-xl border-2 border-emerald-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col justify-between hover:border-emerald-400 transition-all">
+                <div>
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-3xl shadow-lg mb-4">
+                        🧑‍🎓
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">Saya Siswa</h2>
+                    <p class="text-slate-400 text-sm mb-4">
+                        Masukkan kode ruangan dari gurumu dan bersiaplah memanjat menara hingga ke puncak!
+                    </p>
+
+                    <div class="space-y-3 mb-5">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Nama Panggilan</label>
+                            <input id="inputStudentName" type="text" maxlength="16" placeholder="Contoh: Budi Santoso"
+                                class="w-full px-4 py-3 rounded-xl bg-slate-800/90 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400 font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Kode Ruangan (6 Karakter)</label>
+                            <input id="inputRoomCode" type="text" maxlength="6" placeholder="Contoh: KLS82A"
+                                class="w-full px-4 py-3 rounded-xl bg-slate-800/90 border border-slate-700 text-amber-300 placeholder-slate-500 focus:outline-none focus:border-emerald-400 font-display font-bold text-xl tracking-widest uppercase">
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="joinStudentRoom()" class="btn-3d w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-display font-bold text-lg shadow-[0_5px_0_#065f46] flex items-center justify-center gap-2 cursor-pointer">
+                    <span>🚀 Gabung Ruangan</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Solo / Simulation Mode Banner -->
+        <div class="mt-8 w-full max-w-4xl bg-amber-500/10 border border-amber-400/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 z-10">
+            <div class="flex items-center gap-3 text-center sm:text-left">
+                <span class="text-2xl">⚡</span>
+                <div>
+                    <h3 class="font-bold text-amber-300 text-sm sm:text-base">Ingin Langsung Mencoba Game Tanpa Menunggu?</h3>
+                    <p class="text-xs text-slate-300">Mainkan Mode Uji Coba Solo dengan soal pengetahuan umum seru yang sudah disiapkan!</p>
+                </div>
+            </div>
+            <button onclick="startQuickSoloDemo()" class="btn-3d shrink-0 px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-display font-bold text-sm shadow-[0_4px_0_#b45309] cursor-pointer">
+                Main Uji Coba Sekarang →
+            </button>
+        </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 2: TEACHER DASHBOARD (PANEL KONTROL GURU)                        -->
+    <!-- ===================================================================== -->
+    <section id="viewTeacher" class="hidden flex-1 flex flex-col max-w-7xl w-full mx-auto p-4 sm:p-6 gap-6">
+        <!-- Top Bar -->
+        <header class="bg-slate-900/90 border border-slate-800 rounded-3xl p-4 sm:p-6 flex flex-col lg:flex-row items-center justify-between gap-4 shadow-xl">
+            <div class="flex items-center gap-3">
+                <button onclick="leaveToLanding()" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-bold cursor-pointer" title="Kembali ke Beranda">
+                    ← Keluar
+                </button>
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">Panel Kontrol Guru</span>
+                    <h1 class="text-xl sm:text-2xl font-bold text-white">Tower of Quiz — Manajemen Kelas</h1>
+                </div>
+            </div>
+
+            <!-- Room Code Display & Copy -->
+            <div class="flex flex-wrap items-center justify-center gap-3">
+                <div class="bg-slate-950 border-2 border-dashed border-amber-400/60 rounded-2xl px-5 py-2 flex items-center gap-3">
+                    <div>
+                        <span class="block text-[10px] uppercase tracking-widest text-slate-400 font-bold">Kode Ruangan</span>
+                        <span id="teacherRoomCodeDisplay" class="font-display text-2xl sm:text-3xl font-bold text-amber-300 tracking-widest">------</span>
+                    </div>
+                    <button onclick="copyRoomCode()" class="btn-3d px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow-[0_3px_0_#b45309] cursor-pointer">
+                        📋 Salin
+                    </button>
+                </div>
+
+                <!-- Game Status Controls -->
+                <div class="flex items-center gap-2">
+                    <button id="btnTeacherStart" onclick="teacherStartGame()" class="btn-3d px-5 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-bold text-base shadow-[0_4px_0_#065f46] cursor-pointer">
+                        ▶ Mulai Game
+                    </button>
+                    <button id="btnTeacherReset" onclick="teacherResetGame()" class="btn-3d px-4 py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-display font-bold text-sm shadow-[0_4px_0_#881337] cursor-pointer">
+                        🔄 Reset
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Grid: Left (Timer & Leaderboard), Right (Question Bank Editor) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+            <!-- Left Column: Settings & Live Students (5 cols) -->
+            <div class="lg:col-span-5 flex flex-col gap-6">
+                <!-- Timer & Game Status Card -->
+                <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">⏱️ Pengaturan Waktu</h2>
+                        <span id="teacherStatusBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            Menunggu Siswa
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 font-bold mb-1">Durasi (Menit)</label>
+                            <input id="inputTimerMinutes" type="number" min="0" max="60" value="3" onchange="updateTeacherTimerSetting()"
+                                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold text-lg focus:outline-none focus:border-indigo-400">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 font-bold mb-1">Tambahan (Detik)</label>
+                            <input id="inputTimerSeconds" type="number" min="0" max="59" value="0" onchange="updateTeacherTimerSetting()"
+                                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white font-bold text-lg focus:outline-none focus:border-indigo-400">
+                        </div>
+                    </div>
+
+                    <!-- Preset Quick Buttons -->
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <button onclick="setQuickTimer(1, 30)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 cursor-pointer">1 Menit 30 Detik</button>
+                        <button onclick="setQuickTimer(3, 0)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 cursor-pointer">3 Menit</button>
+                        <button onclick="setQuickTimer(5, 0)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 cursor-pointer">5 Menit</button>
+                    </div>
+
+                    <!-- Live Countdown Display for Teacher -->
+                    <div class="bg-slate-950 rounded-2xl p-4 flex items-center justify-between border border-slate-800">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Sisa Waktu Berjalan:</span>
+                        <span id="teacherLiveClock" class="font-display text-2xl font-bold text-cyan-400">03:00</span>
+                    </div>
+                </div>
+
+                <!-- Live Leaderboard Card -->
+                <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xl flex-1 flex flex-col">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">🏆 Peringkat Siswa Live</h2>
+                        <span id="studentCountBadge" class="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 text-xs font-bold">0 Siswa</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-4">
+                        Tip: Buka tab browser baru dan masuk sebagai <b>Siswa</b> menggunakan kode ruangan di atas untuk melihat sinkronisasi langsung!
+                    </p>
+
+                    <div id="teacherLeaderboardList" class="space-y-2.5 overflow-y-auto max-h-80 pr-1 flex-1">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Custom Question Builder (7 cols) -->
+            <div class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xl flex flex-col">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">📝 Bank Soal Kelas</h2>
+                        <p class="text-xs text-slate-400">Setiap jawaban benar memberi siswa <b>+2 Poin Lompatan</b> (1 poin = 1 lompatan).</p>
+                    </div>
+                    <span id="questionCountBadge" class="self-start sm:self-auto px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">
+                        5 Soal Aktif
+                    </span>
+                </div>
+
+                <!-- Form Add / Edit Question -->
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 mb-5">
+                    <div class="flex items-center justify-between mb-2">
+                        <span id="formQuestionTitle" class="text-xs font-bold uppercase tracking-wider text-indigo-400">+ Tambah Soal Baru</span>
+                        <button id="btnCancelEditQuestion" onclick="resetQuestionForm()" class="hidden text-xs text-rose-400 hover:underline cursor-pointer">Batal Edit</button>
+                    </div>
+                    <input type="hidden" id="editQuestionIndex" value="-1">
+
+                    <textarea id="inputQuestionText" rows="2" placeholder="Tulis pertanyaan di sini... (Contoh: Apa ibu kota negara Indonesia yang baru?)"
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-indigo-400 mb-3"></textarea>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3">
+                        <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5">
+                            <input type="radio" name="correctOption" value="0" checked class="accent-emerald-400 w-4 h-4 cursor-pointer" title="Tandai A benar">
+                            <span class="font-bold text-rose-400 text-xs">A</span>
+                            <input id="optA" type="text" placeholder="Pilihan A" class="w-full bg-transparent text-white text-sm focus:outline-none">
+                        </div>
+                        <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5">
+                            <input type="radio" name="correctOption" value="1" class="accent-emerald-400 w-4 h-4 cursor-pointer" title="Tandai B benar">
+                            <span class="font-bold text-sky-400 text-xs">B</span>
+                            <input id="optB" type="text" placeholder="Pilihan B" class="w-full bg-transparent text-white text-sm focus:outline-none">
+                        </div>
+                        <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5">
+                            <input type="radio" name="correctOption" value="2" class="accent-emerald-400 w-4 h-4 cursor-pointer" title="Tandai C benar">
+                            <span class="font-bold text-amber-400 text-xs">C</span>
+                            <input id="optC" type="text" placeholder="Pilihan C" class="w-full bg-transparent text-white text-sm focus:outline-none">
+                        </div>
+                        <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5">
+                            <input type="radio" name="correctOption" value="3" class="accent-emerald-400 w-4 h-4 cursor-pointer" title="Tandai D benar">
+                            <span class="font-bold text-emerald-400 text-xs">D</span>
+                            <input id="optD" type="text" placeholder="Pilihan D" class="w-full bg-transparent text-white text-sm focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-[11px] text-slate-400">*Klik lingkaran radio di kiri opsi untuk memilih jawaban yang benar.</span>
+                        <button onclick="saveTeacherQuestion()" class="btn-3d px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-xs sm:text-sm shadow-[0_3px_0_#3730a3] cursor-pointer">
+                            💾 Simpan Soal
+                        </button>
+                    </div>
+                </div>
+
+                <!-- List of Questions -->
+                <div id="teacherQuestionsList" class="space-y-3 overflow-y-auto max-h-[380px] pr-1 flex-1">
+                    <!-- Rendered dynamically -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- VIEW 3: STUDENT GAMEPLAY (TOWER OF HELL EDUCATIONAL PLATFORMER)       -->
+    <!-- ===================================================================== -->
+    <section id="viewStudent" class="hidden fixed inset-0 flex flex-col bg-slate-950 overflow-hidden">
+        <!-- TOP HUD -->
+        <header class="relative z-20 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-3 sm:px-6 py-2.5 flex items-center justify-between gap-2 shadow-lg">
+            <!-- Left: Exit & Room Code -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button onclick="leaveToLanding()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold cursor-pointer">
+                    ✕
+                </button>
+                <div class="hidden sm:block">
+                    <span class="block text-[10px] uppercase text-slate-400 font-bold">Ruangan</span>
+                    <span id="hudRoomCode" class="font-display font-bold text-amber-300 text-sm tracking-wider">DEMO01</span>
+                </div>
+                <div class="bg-slate-800/90 px-3 py-1 rounded-xl border border-slate-700 flex items-center gap-1.5">
+                    <span class="text-sm">⏱️</span>
+                    <span id="hudTimer" class="font-display font-bold text-cyan-300 text-sm sm:text-base">03:00</span>
+                </div>
+            </div>
+
+            <!-- Center: Tower Progress Bar -->
+            <div class="flex-1 max-w-xs sm:max-w-md mx-2">
+                <div class="flex justify-between text-[11px] font-bold mb-1">
+                    <span class="text-slate-300">Ketinggian: <span id="hudHeightText" class="text-emerald-400">0m</span> / 100m</span>
+                    <span id="hudRankText" class="text-amber-300">Peringkat #1</span>
+                </div>
+                <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                    <div id="hudProgressBar" class="h-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-fuchsia-500 rounded-full transition-all duration-150" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Right: Jump Points Counter & Sound Toggle -->
+            <div class="flex items-center gap-2">
+                <div id="hudPointsBox" class="bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-2 border-amber-400/60 px-3 py-1 rounded-2xl flex items-center gap-2 shadow-inner">
+                    <span class="text-lg">🦘</span>
+                    <div>
+                        <span class="block text-[9px] uppercase font-bold text-amber-200 leading-none">Poin Lompat</span>
+                        <span id="hudJumpPoints" class="font-display font-bold text-amber-300 text-lg sm:text-xl leading-tight">0</span>
+                    </div>
+                </div>
+
+                <button id="btnMuteToggle" onclick="toggleMute()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-base cursor-pointer" title="Suara On/Off">
+                    🔊
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN GAME CANVAS AREA -->
+        <div class="relative flex-1 w-full h-full overflow-hidden">
+            <canvas id="gameCanvas"></canvas>
+
+            <!-- WAITING LOBBY OVERLAY (Jika guru belum menekan Mulai Game) -->
+            <div id="studentWaitingOverlay" class="hidden absolute inset-0 z-30 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+                <div class="w-20 h-20 rounded-3xl bg-indigo-500/20 border-2 border-indigo-400 flex items-center justify-center text-4xl mb-4 animate-bounce">
+                    ⏳
+                </div>
+                <h2 class="text-2xl sm:text-4xl font-bold text-white mb-2">Menunggu Guru Memulai Game...</h2>
+                <p class="text-slate-300 max-w-md text-sm sm:text-base mb-6">
+                    Kamu sudah terhubung ke ruangan <span id="waitingRoomCode" class="font-display font-bold text-amber-300">------</span> sebagai <span id="waitingStudentName" class="font-bold text-emerald-400">Siswa</span>. Bersiaplah!
+                </p>
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span> Terhubung secara langsung
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- TOMBOL RESPAWN DI POJOK KANAN TENGAH (Sesuai Permintaan User!)    -->
+            <!-- ================================================================= -->
+            <button id="btnRespawn" onclick="triggerRespawn()"
+                style="right: 16px; top: 50%; transform: translateY(-50%);"
+                class="btn-3d fixed z-20 px-3.5 py-3 sm:px-4 sm:py-3.5 rounded-2xl bg-gradient-to-b from-rose-500 to-rose-700 hover:from-rose-400 hover:to-rose-600 text-white font-display font-bold text-xs sm:text-sm border-2 border-rose-300/60 shadow-[0_5px_0_#881337] flex flex-col items-center gap-1 cursor-pointer"
+                title="Kembali ke Checkpoint Terakhir (Tombol R)">
+                <span class="text-lg sm:text-xl leading-none">🚩</span>
+                <span>RESPAWN</span>
+                <span class="text-[9px] font-sans font-semibold text-rose-100 opacity-90">Ke Checkpoint</span>
+            </button>
+
+            <!-- CHECKPOINT SAVED BANNER -->
+            <div id="checkpointBanner" class="hidden absolute top-6 left-1/2 -translate-x-1/2 z-20 pointer-events-none animate-pop">
+                <div class="px-5 py-2 rounded-full bg-emerald-500 text-slate-950 font-display font-bold text-sm sm:text-base shadow-xl border-2 border-white flex items-center gap-2">
+                    <span>🚩</span> CHECKPOINT TERSIMPAN!
+                </div>
+            </div>
+
+            <!-- FLOATING "JAWAB SOAL (+2 POIN)" CTA BUTTON (Selalu mudah diakses) -->
+            <div class="absolute bottom-24 sm:bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1.5">
+                <button id="btnOpenQuiz" onclick="openQuizModal()"
+                    class="btn-3d px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-pink-500 hover:brightness-110 text-slate-950 font-display font-extrabold text-sm sm:text-lg shadow-[0_5px_0_#9a3412] border-2 border-white/60 flex items-center gap-2.5 cursor-pointer">
+                    <span class="text-xl">🧠</span>
+                    <span>Jawab Soal (+2 Poin Lompat)</span>
+                </button>
+                <span class="hidden sm:inline-block text-[11px] text-slate-300 bg-slate-950/70 px-3 py-0.5 rounded-full backdrop-blur-sm">
+                    Gerak: <b>A / D</b> atau <b>Panah Kiri/Kanan</b> • Lompat: <b>Spasi / W</b> (1 Poin) • Soal: <b>Enter / Q</b>
+                </span>
+            </div>
+
+            <!-- TOUCH CONTROLS FOR MOBILE / TABLET -->
+            <div class="sm:hidden absolute bottom-4 inset-x-4 z-20 flex items-center justify-between pointer-events-none">
+                <!-- Left / Right D-Pad -->
+                <div class="flex items-center gap-3 pointer-events-auto">
+                    <button id="touchLeft" class="w-14 h-14 rounded-2xl bg-slate-900/85 border-2 border-slate-600 active:bg-indigo-600 text-white text-2xl font-bold flex items-center justify-center shadow-lg">
+                        ◀
+                    </button>
+                    <button id="touchRight" class="w-14 h-14 rounded-2xl bg-slate-900/85 border-2 border-slate-600 active:bg-indigo-600 text-white text-2xl font-bold flex items-center justify-center shadow-lg">
+                        ▶
+                    </button>
+                </div>
+                <!-- Jump Button -->
+                <button id="touchJump" class="pointer-events-auto px-5 h-14 rounded-2xl bg-emerald-500/90 border-2 border-emerald-300 active:bg-emerald-400 text-slate-950 font-display font-bold text-base shadow-lg flex items-center gap-1.5">
+                    <span>⬆️</span> LOMPAT
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL: KUIS SOAL & FEEDBACK MEME ALA QUIZIZZ                          -->
+    <!-- ===================================================================== -->
+    <div id="quizModal" class="hidden fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-slate-900 border-2 border-indigo-500/50 rounded-3xl max-w-xl w-full p-5 sm:p-7 shadow-2xl relative animate-pop">
+            <!-- Top Modal Header -->
+            <div class="flex items-center justify-between mb-4">
+                <span class="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold border border-indigo-400/30">
+                    🎯 Misi Poin Lompatan (+2 Poin)
+                </span>
+                <button onclick="closeQuizModal()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm cursor-pointer">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Question Content Area -->
+            <div id="quizQuestionContainer">
+                <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-5 mb-5 text-center min-h-[100px] flex items-center justify-center">
+                    <h3 id="modalQuestionText" class="text-lg sm:text-xl font-bold text-white leading-snug">
+                        Memuat soal...
+                    </h3>
+                </div>
+
+                <!-- 4 Colorful Quizizz-Style Answer Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button onclick="submitQuizAnswer(0)" id="quizOptBtn0" class="btn-3d p-4 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-left shadow-[0_4px_0_#881337] flex items-start gap-3 cursor-pointer">
+                        <span class="w-7 h-7 rounded-lg bg-black/25 flex items-center justify-center shrink-0 font-display">A</span>
+                        <span id="quizOptText0" class="text-sm sm:text-base leading-snug">Opsi A</span>
+                    </button>
+                    <button onclick="submitQuizAnswer(1)" id="quizOptBtn1" class="btn-3d p-4 rounded-2xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-left shadow-[0_4px_0_#075985] flex items-start gap-3 cursor-pointer">
+                        <span class="w-7 h-7 rounded-lg bg-black/25 flex items-center justify-center shrink-0 font-display">B</span>
+                        <span id="quizOptText1" class="text-sm sm:text-base leading-snug">Opsi B</span>
+                    </button>
+                    <button onclick="submitQuizAnswer(2)" id="quizOptBtn2" class="btn-3d p-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-left shadow-[0_4px_0_#92400e] flex items-start gap-3 cursor-pointer">
+                        <span class="w-7 h-7 rounded-lg bg-black/15 flex items-center justify-center shrink-0 font-display">C</span>
+                        <span id="quizOptText2" class="text-sm sm:text-base leading-snug">Opsi C</span>
+                    </button>
+                    <button onclick="submitQuizAnswer(3)" id="quizOptBtn3" class="btn-3d p-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-left shadow-[0_4px_0_#065f46] flex items-start gap-3 cursor-pointer">
+                        <span class="w-7 h-7 rounded-lg bg-black/25 flex items-center justify-center shrink-0 font-display">D</span>
+                        <span id="quizOptText3" class="text-sm sm:text-base leading-snug">Opsi D</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- QUIZIZZ-STYLE MEME FEEDBACK OVERLAY (Muncul setelah menjawab) -->
+            <div id="quizMemeFeedback" class="hidden text-center py-3 animate-pop">
+                <div id="memeCardVisual" class="mx-auto w-44 h-44 rounded-3xl flex flex-col items-center justify-center mb-4 border-4 shadow-2xl relative overflow-hidden">
+                    <!-- Custom Animated SVG Meme Illustration injected via JS -->
+                </div>
+                <div id="memeBadge" class="inline-block px-4 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2">
+                    +2 POIN LOMPATAN!
+                </div>
+                <h3 id="memeHeadline" class="font-display text-2xl sm:text-3xl font-bold text-white mb-1">
+                    MANTAP JIWA!
+                </h3>
+                <p id="memeSubtext" class="text-slate-300 text-sm mb-6">
+                    Otak encer! Gas lanjut panjat menara!
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <button onclick="nextQuestionInModal()" class="btn-3d px-5 py-3 rounded-2xl bg-indigo-500 hover:bg-indigo-400 text-white font-display font-bold text-sm shadow-[0_4px_0_#3730a3] cursor-pointer">
+                        🔄 Jawab Soal Lagi (+2 Poin)
+                    </button>
+                    <button onclick="closeQuizModal()" class="btn-3d px-6 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-bold text-sm shadow-[0_4px_0_#065f46] cursor-pointer">
+                        🦘 Lanjut Memanjat!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL: VICTORY / TIME'S UP PODIUM SCREEN                              -->
+    <!-- ===================================================================== -->
+    <div id="endGameModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-lg flex items-center justify-center p-4">
+        <div class="bg-slate-900 border-2 border-amber-400/60 rounded-3xl max-w-lg w-full p-6 sm:p-8 text-center shadow-2xl animate-pop">
+            <div id="endGameTrophy" class="text-6xl mb-3 animate-bounce">🏆</div>
+            <h2 id="endGameTitle" class="font-display text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-pink-400 mb-2">
+                PUNCAK TERCAPAI!
+            </h2>
+            <p id="endGameSubtitle" class="text-slate-300 text-sm sm:text-base mb-6">
+                Luar biasa! Kamu berhasil menaklukkan Tower of Quiz!
+            </p>
+
+            <!-- Podium List -->
+            <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 mb-6 text-left">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Papan Klasemen Akhir</h3>
+                <div id="endGameLeaderboard" class="space-y-2 max-h-52 overflow-y-auto">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <button onclick="replayOrContinue()" class="btn-3d px-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-display font-bold text-base shadow-[0_4px_0_#065f46] cursor-pointer">
+                    🔄 Main Lagi
+                </button>
+                <button onclick="leaveToLanding()" class="btn-3d px-6 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-display font-bold text-base shadow-[0_4px_0_#1e293b] cursor-pointer">
+                    🏠 Ke Menu Utama
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- JAVASCRIPT ENGINE: AUDIO, MULTI-TAB SYNC, QUIZ & 2D TOWER PLATFORMER  -->
+    <!-- ===================================================================== -->
+    <script>
+        /* ==========================================================================
+           1. SOUND EFFECTS SYNTHESIZER (Web Audio API - Tanpa File Eksternal)
+           ========================================================================== */
+        const SoundFX = {
+            ctx: null,
+            muted: false,
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            },
+            playTone(freq, type, duration, vol = 0.15, slideTo = null) {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                if (slideTo) {
+                    osc.frequency.exponentialRampToValueAtTime(slideTo, this.ctx.currentTime + duration);
+                }
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            },
+            jump() {
+                this.playTone(280, 'sine', 0.22, 0.18, 620);
+            },
+            noPoints() {
+                this.playTone(180, 'sawtooth', 0.18, 0.12, 120);
+            },
+            correct() {
+                this.playTone(523.25, 'triangle', 0.12, 0.2);
+                setTimeout(() => this.playTone(659.25, 'triangle', 0.12, 0.2), 90);
+                setTimeout(() => this.playTone(783.99, 'triangle', 0.25, 0.22), 180);
+            },
+            wrong() {
+                this.playTone(220, 'sawtooth', 0.18, 0.16, 180);
+                setTimeout(() => this.playTone(165, 'sawtooth', 0.3, 0.16, 130), 150);
+            },
+            checkpoint() {
+                this.playTone(440, 'sine', 0.1, 0.18);
+                setTimeout(() => this.playTone(554.37, 'sine', 0.1, 0.18), 80);
+                setTimeout(() => this.playTone(659.25, 'sine', 0.1, 0.18), 160);
+                setTimeout(() => this.playTone(880, 'sine', 0.28, 0.2), 240);
+            },
+            respawn() {
+                this.playTone(500, 'sine', 0.25, 0.16, 200);
+            },
+            victory() {
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((n, idx) => {
+                    setTimeout(() => this.playTone(n, 'triangle', 0.28, 0.22), idx * 120);
+                });
+            }
+        };
+
+        function toggleMute() {
+            SoundFX.muted = !SoundFX.muted;
+            document.getElementById('btnMuteToggle').textContent = SoundFX.muted ? '🔇' : '🔊';
+            showToast(SoundFX.muted ? 'Suara dimatikan' : 'Suara diaktifkan', 'info');
+        }
+
+        /* ==========================================================================
+           2. TOAST NOTIFICATION SYSTEM (Pengganti alert() / confirm())
+           ========================================================================== */
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const colors = {
+                info: 'bg-slate-800 border-indigo-400 text-white',
+                success: 'bg-emerald-600 border-emerald-300 text-white',
+                warning: 'bg-amber-500 border-amber-200 text-slate-950',
+                error: 'bg-rose-600 border-rose-300 text-white'
+            };
+            toast.className = `px-4 py-3 rounded-2xl border-2 shadow-xl font-bold text-xs sm:text-sm text-center animate-pop ${colors[type] || colors.info}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 2600);
+        }
+
+        /* ==========================================================================
+           3. DEFAULT BANK SOAL & QUIZIZZ-STYLE MEME DATA
+           ========================================================================== */
+        const DEFAULT_QUESTIONS = [
+            {
+                q: "Hewan darat tercepat di dunia yang mampu berlari hingga 110 km/jam adalah...",
+                options: ["Singa", "Cheetah", "Kuda Balap", "Kanguru"],
+                correct: 1
+            },
+            {
+                q: "Planet terbesar di tata surya kita adalah...",
+                options: ["Mars", "Saturnus", "Jupiter", "Neptunus"],
+                correct: 2
+            },
+            {
+                q: "Jika 15 + 27 × 0 = ..., berapakah hasilnya?",
+                options: ["0", "42", "15", "27"],
+                correct: 2
+            },
+            {
+                q: "Pulau terbesar di Indonesia berdasarkan luas wilayahnya adalah...",
+                options: ["Jawa", "Sumatra", "Sulawesi", "Kalimantan"],
+                correct: 3
+            },
+            {
+                q: "Zat hijau daun yang membantu tumbuhan melakukan fotosintesis disebut...",
+                options: ["Klorofil", "Stomata", "Karbohidrat", "Oksigen"],
+                correct: 0
+            }
+        ];
+
+        const MEMES_CORRECT = [
+            {
+                headline: "MANTAP JIWA! +2 LOMPATAN!",
+                subtext: "Otak encer banget! Gas langsung lompat ke puncak menara!",
+                badge: "BENAR • +2 POIN LOMPAT",
+                bg: "from-emerald-400 to-teal-600 border-emerald-200",
+                svg: `<svg viewBox="0 0 120 120" class="w-28 h-28">
+                        <circle cx="60" cy="60" r="46" fill="#FDE047" stroke="#1E293B" stroke-width="4"/>
+                        <rect x="26" y="42" width="30" height="16" rx="4" fill="#0F172A"/>
+                        <rect x="64" y="42" width="30" height="16" rx="4" fill="#0F172A"/>
+                        <line x1="56" y1="48" x2="64" y2="48" stroke="#0F172A" stroke-width="4"/>
+                        <path d="M 38 74 Q 60 95 82 74" fill="none" stroke="#0F172A" stroke-width="5" stroke-linecap="round"/>
+                        <text x="60" y="22" text-anchor="middle" font-size="18" font-weight="bold" fill="#FFF">😎 +2</text>
+                      </svg>`
+            },
+            {
+                headline: "IQ 200 DETECTED!",
+                subtext: "Guru pasti bangga melihat kecepatan berpikirmu!",
+                badge: "JENIUS • +2 POIN LOMPAT",
+                bg: "from-amber-400 to-orange-500 border-amber-100",
+                svg: `<svg viewBox="0 0 120 120" class="w-28 h-28">
+                        <circle cx="60" cy="64" r="44" fill="#FDE047" stroke="#1E293B" stroke-width="4"/>
+                        <polygon points="60,8 66,24 84,24 70,34 75,50 60,40 45,50 50,34 36,24 54,24" fill="#FFF" stroke="#0F172A" stroke-width="2"/>
+                        <circle cx="44" cy="60" r="6" fill="#0F172A"/>
+                        <circle cx="76" cy="60" r="6" fill="#0F172A"/>
+                        <path d="M 42 78 Q 60 94 78 78 Z" fill="#F43F5E" stroke="#0F172A" stroke-width="3"/>
+                      </svg>`
+            },
+            {
+                headline: "AUTO JUARA KELAS!",
+                subtext: "Jawaban tepat sasaran! Jangan kasih kendor, naik terus!",
+                badge: "GACOR • +2 POIN LOMPAT",
+                bg: "from-fuchsia-500 to-indigo-600 border-pink-200",
+                svg: `<svg viewBox="0 0 120 120" class="w-28 h-28">
+                        <path d="M60 15 L75 45 L108 50 L84 73 L90 105 L60 90 L30 105 L36 73 L12 50 L45 45 Z" fill="#FACC15" stroke="#0F172A" stroke-width="4"/>
+                        <circle cx="50" cy="58" r="5" fill="#0F172A"/>
+                        <circle cx="70" cy="58" r="5" fill="#0F172A"/>
+                        <path d="M 48 72 Q 60 84 72 72" fill="none" stroke="#0F172A" stroke-width="4" stroke-linecap="round"/>
+                      </svg>`
+            }
+        ];
+
+        const MEMES_WRONG = [
+            {
+                headline: "YAH, KURANG TEPAT!",
+                subtext: "Belum dapat poin lompatan nih. Tarik napas, coba soal berikutnya!",
+                badge: "SALAH • 0 POIN",
+                bg: "from-rose-500 to-red-700 border-rose-200",
+                svg: `<svg viewBox="0 0 120 120" class="w-28 h-28">
+                        <circle cx="60" cy="60" r="46" fill="#FDA4AF" stroke="#1E293B" stroke-width="4"/>
+                        <path d="M 36 46 L 50 56 M 50 46 L 36 56" stroke="#0F172A" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M 70 46 L 84 56 M 84 46 L 70 56" stroke="#0F172A" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M 40 84 Q 60 68 80 84" fill="none" stroke="#0F172A" stroke-width="5" stroke-linecap="round"/>
+                        <path d="M 86 62 Q 92 74 86 80 Q 80 74 86 62" fill="#38BDF8"/>
+                      </svg>`
+            },
+            {
+                headline: "NT (NICE TRY) BESTIE!",
+                subtext: "Hampir aja bener! Jangan menyerah, klik soal lagi yuk!",
+                badge: "COBA LAGI • 0 POIN",
+                bg: "from-slate-600 to-slate-800 border-slate-400",
+                svg: `<svg viewBox="0 0 120 120" class="w-28 h-28">
+                        <circle cx="60" cy="60" r="46" fill="#CBD5E1" stroke="#1E293B" stroke-width="4"/>
+                        <circle cx="44" cy="52" r="6" fill="#0F172A"/>
+                        <circle cx="76" cy="52" r="6" fill="#0F172A"/>
+                        <line x1="42" y1="78" x2="78" y2="74" stroke="#0F172A" stroke-width="5" stroke-linecap="round"/>
+                        <text x="86" y="34" font-size="22" font-weight="bold" fill="#FDE047">?</text>
+                      </svg>`
+            }
+        ];
+
+        /* ==========================================================================
+           4. ROOM & MULTI-TAB STATE MANAGEMENT (localStorage + storage event)
+           ========================================================================== */
+        const STORAGE_PREFIX = 'TOWER_OF_QUIZ_ROOM_';
+        let currentRole = null; // 'teacher' | 'student' | 'solo'
+        let currentRoomCode = null;
+        let currentStudentId = null;
+        let currentStudentName = 'Siswa';
+        let syncInterval = null;
+
+        function generateRandomRoomCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+
+        function getRoomData(code) {
+            if (!code) return null;
+            try {
+                const raw = localStorage.getItem(STORAGE_PREFIX + code.toUpperCase());
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function saveRoomData(code, data) {
+            if (!code) return;
+            try {
+                localStorage.setItem(STORAGE_PREFIX + code.toUpperCase(), JSON.stringify(data));
+            } catch (e) {
+                console.error('Storage error', e);
+            }
+        }
+
+        function switchView(viewId) {
+            ['viewLanding', 'viewTeacher', 'viewStudent'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        function leaveToLanding() {
+            if (syncInterval) clearInterval(syncInterval);
+            stopGameLoop();
+            currentRole = null;
+            currentRoomCode = null;
+            document.getElementById('endGameModal').classList.add('hidden');
+            document.getElementById('quizModal').classList.add('hidden');
+            switchView('viewLanding');
+        }
+
+        // Listen for cross-tab storage changes (Guru <-> Siswa real-time sync!)
+        window.addEventListener('storage', (e) => {
+            if (!currentRoomCode) return;
+            if (e.key === STORAGE_PREFIX + currentRoomCode) {
+                if (currentRole === 'teacher') {
+                    renderTeacherDashboard();
+                } else if (currentRole === 'student') {
+                    syncStudentWithRoom();
+                }
+            }
+        });
+
+        /* ==========================================================================
+           5. TEACHER DASHBOARD LOGIC
+           ========================================================================== */
+        function createTeacherRoom() {
+            SoundFX.init();
+            const code = generateRandomRoomCode();
+            currentRole = 'teacher';
+            currentRoomCode = code;
+
+            const initialRoom = {
+                code: code,
+                status: 'waiting', // 'waiting' | 'playing' | 'ended'
+                durationSec: 180,
+                endTime: null,
+                questions: JSON.parse(JSON.stringify(DEFAULT_QUESTIONS)),
+                students: {}
+            };
+            saveRoomData(code, initialRoom);
+
+            document.getElementById('teacherRoomCodeDisplay').textContent = code;
+            document.getElementById('inputTimerMinutes').value = 3;
+            document.getElementById('inputTimerSeconds').value = 0;
+
+            switchView('viewTeacher');
+            renderTeacherDashboard();
+            showToast(`Ruangan ${code} berhasil dibuat!`, 'success');
+
+            if (syncInterval) clearInterval(syncInterval);
+            syncInterval = setInterval(updateTeacherClockAndLeaderboard, 500);
+        }
+
+        function copyRoomCode() {
+            if (!currentRoomCode) return;
+            const tempInput = document.createElement('input');
+            tempInput.value = currentRoomCode;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast(`Kode ruangan "${currentRoomCode}" disalin ke clipboard!`, 'success');
+        }
+
+        function setQuickTimer(min, sec) {
+            document.getElementById('inputTimerMinutes').value = min;
+            document.getElementById('inputTimerSeconds').value = sec;
+            updateTeacherTimerSetting();
+        }
+
+        function updateTeacherTimerSetting() {
+            const room = getRoomData(currentRoomCode);
+            if (!room) return;
+            const min = Math.max(0, parseInt(document.getElementById('inputTimerMinutes').value) || 0);
+            const sec = Math.max(0, Math.min(59, parseInt(document.getElementById('inputTimerSeconds').value) || 0));
+            const total = Math.max(15, min * 60 + sec);
+            room.durationSec = total;
+            if (room.status === 'playing') {
+                room.endTime = Date.now() + total * 1000;
+            }
+            saveRoomData(currentRoomCode, room);
+            updateTeacherClockAndLeaderboard();
+            showToast(`Waktu diatur menjadi ${formatSeconds(total)}`, 'info');
+        }
+
+        function teacherStartGame() {
+            const room = getRoomData(currentRoomCode);
+            if (!room) return;
+            if (room.questions.length === 0) {
+                showToast('Tambahkan minimal 1 soal sebelum memulai!', 'error');
+                return;
+            }
+            SoundFX.checkpoint();
+            room.status = 'playing';
+            room.endTime = Date.now() + room.durationSec * 1000;
+            saveRoomData(currentRoomCode, room);
+            renderTeacherDashboard();
+            showToast('Game dimulai! Siswa sekarang bisa memanjat menara!', 'success');
+        }
+
+        function teacherResetGame() {
+            const room = getRoomData(currentRoomCode);
+            if (!room) return;
+            room.status = 'waiting';
+            room.endTime = null;
+            Object.keys(room.students).forEach(id => {
+                room.students[id].height = 0;
+                room.students[id].points = 0;
+                room.students[id].finished = false;
+            });
+            saveRoomData(currentRoomCode, room);
+            renderTeacherDashboard();
+            showToast('Sesi di-reset ke lobi tunggu.', 'warning');
+        }
+
+        function saveTeacherQuestion() {
+            const room = getRoomData(currentRoomCode);
+            if (!room) return;
+
+            const qText = document.getElementById('inputQuestionText').value.trim();
+            const opts = [
+                document.getElementById('optA').value.trim(),
+                document.getElementById('optB').value.trim(),
+                document.getElementById('optC').value.trim(),
+                document.getElementById('optD').value.trim()
+            ];
+            const correctRadio = document.querySelector('input[name="correctOption"]:checked');
+            const correctIdx = correctRadio ? parseInt(correctRadio.value) : 0;
+
+            if (!qText || opts.some(o => !o)) {
+                showToast('Harap isi teks pertanyaan dan keempat pilihan A, B, C, D!', 'error');
+                return;
+            }
+
+            const editIdx = parseInt(document.getElementById('editQuestionIndex').value);
+            const newQ = { q: qText, options: opts, correct: correctIdx };
+
+            if (editIdx >= 0 && editIdx < room.questions.length) {
+                room.questions[editIdx] = newQ;
+                showToast('Soal berhasil diperbarui!', 'success');
+            } else {
+                room.questions.push(newQ);
+                showToast('Soal baru berhasil ditambahkan!', 'success');
+            }
+
+            saveRoomData(currentRoomCode, room);
+            resetQuestionForm();
+            renderTeacherDashboard();
+        }
+
+        function editTeacherQuestion(idx) {
+            const room = getRoomData(currentRoomCode);
+            if (!room || !room.questions[idx]) return;
+            const item = room.questions[idx];
+
+            document.getElementById('editQuestionIndex').value = idx;
+            document.getElementById('formQuestionTitle').textContent = `✏️ Edit Soal #${idx + 1}`;
+            document.getElementById('btnCancelEditQuestion').classList.remove('hidden');
+
+            document.getElementById('inputQuestionText').value = item.q;
+            document.getElementById('optA').value = item.options[0];
+            document.getElementById('optB').value = item.options[1];
+            document.getElementById('optC').value = item.options[2];
+            document.getElementById('optD').value = item.options[3];
+            const radios = document.querySelectorAll('input[name="correctOption"]');
+            if (radios[item.correct]) radios[item.correct].checked = true;
+        }
+
+        function deleteTeacherQuestion(idx) {
+            const room = getRoomData(currentRoomCode);
+            if (!room) return;
+            room.questions.splice(idx, 1);
+            saveRoomData(currentRoomCode, room);
+            renderTeacherDashboard();
+            showToast('Soal dihapus.', 'info');
+        }
+
+        function resetQuestionForm() {
+            document.getElementById('editQuestionIndex').value = -1;
+            document.getElementById('formQuestionTitle').textContent = '+ Tambah Soal Baru';
+            document.getElementById('btnCancelEditQuestion').classList.add('hidden');
+            document.getElementById('inputQuestionText').value = '';
+            document.getElementById('optA').value = '';
+            document.getElementById('optB').value = '';
+            document.getElementById('optC').value = '';
+            document.getElementById('optD').value = '';
+            document.querySelector('input[name="correctOption"][value="0"]').checked = true;
+        }
+
+        function renderTeacherDashboard() {
+            const room = getRoomData(currentRoomCode);
+            if (!room) return;
+
+            // Update Status Badge
+            const badge = document.getElementById('teacherStatusBadge');
+            if (room.status === 'waiting') {
+                badge.textContent = 'Menunggu Siswa';
+                badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30';
+            } else if (room.status === 'playing') {
+                badge.textContent = 'Sedang Berlangsung';
+                badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+            } else {
+                badge.textContent = 'Waktu Habis / Selesai';
+                badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30';
+            }
+
+            // Render Question List
+            document.getElementById('questionCountBadge').textContent = `${room.questions.length} Soal Aktif`;
+            const qList = document.getElementById('teacherQuestionsList');
+            qList.innerHTML = '';
+
+            if (room.questions.length === 0) {
+                qList.innerHTML = `<div class="text-center py-8 text-slate-500 text-sm">Belum ada soal. Tambahkan soal menggunakan formulir di atas.</div>`;
+            } else {
+                const letters = ['A', 'B', 'C', 'D'];
+                room.questions.forEach((item, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-slate-950/70 border border-slate-800 rounded-2xl p-4 flex flex-col gap-2';
+                    card.innerHTML = `
+                        <div class="flex items-start justify-between gap-2">
+                            <p class="text-sm font-bold text-white"><span class="text-indigo-400 mr-1.5">#${idx + 1}</span>${escapeHtml(item.q)}</p>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <button onclick="editTeacherQuestion(${idx})" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-amber-300 font-bold cursor-pointer">Edit</button>
+                                <button onclick="deleteTeacherQuestion(${idx})" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-rose-900/60 text-xs text-rose-400 font-bold cursor-pointer">Hapus</button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1.5 text-xs">
+                            ${item.options.map((opt, oIdx) => `
+                                <div class="px-2.5 py-1 rounded-lg ${oIdx === item.correct ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold' : 'bg-slate-900 text-slate-400'}">
+                                    ${letters[oIdx]}. ${escapeHtml(opt)} ${oIdx === item.correct ? '✓' : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    qList.appendChild(card);
+                });
+            }
+
+            updateTeacherClockAndLeaderboard();
+        }
+
+        function updateTeacherClockAndLeaderboard() {
+            const room = getRoomData(currentRoomCode);
+            if (!room) return;
+
+            // Update Clock
+            const clockEl = document.getElementById('teacherLiveClock');
+            if (room.status === 'playing' && room.endTime) {
+                const rem = Math.max(0, Math.ceil((room.endTime - Date.now()) / 1000));
+                clockEl.textContent = formatSeconds(rem);
+                if (rem === 0 && room.status === 'playing') {
+                    room.status = 'ended';
+                    saveRoomData(currentRoomCode, room);
+                    renderTeacherDashboard();
+                }
+            } else {
+                clockEl.textContent = formatSeconds(room.durationSec);
+            }
+
+            // Render Students
+            const studentsArr = Object.values(room.students || {}).sort((a, b) => b.height - a.height);
+            document.getElementById('studentCountBadge').textContent = `${studentsArr.length} Siswa`;
+
+            const lbEl = document.getElementById('teacherLeaderboardList');
+            if (studentsArr.length === 0) {
+                lbEl.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs border border-dashed border-slate-800 rounded-2xl">Belum ada siswa yang bergabung ke ruangan ini.</div>`;
+                return;
+            }
+
+            lbEl.innerHTML = studentsArr.map((st, idx) => `
+                <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-7 h-7 rounded-xl ${idx === 0 ? 'bg-amber-400 text-slate-950' : 'bg-slate-800 text-slate-300'} font-display font-bold text-xs flex items-center justify-center">
+                            ${idx + 1}
+                        </span>
+                        <div>
+                            <div class="font-bold text-sm text-white flex items-center gap-1.5">
+                                ${escapeHtml(st.name)}
+                                ${st.finished ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">FINIS 🏆</span>' : ''}
+                            </div>
+                            <div class="text-[11px] text-slate-400">Poin Lompat: <b class="text-amber-300">${st.points}</b></div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-display font-bold text-emerald-400 text-base">${st.height}m</span>
+                        <span class="block text-[10px] text-slate-500">/ 100m</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        /* ==========================================================================
+           6. STUDENT JOIN & SOLO DEMO INITIALIZATION
+           ========================================================================== */
+        function joinStudentRoom() {
+            SoundFX.init();
+            const nameInput = document.getElementById('inputStudentName').value.trim();
+            const codeInput = document.getElementById('inputRoomCode').value.trim().toUpperCase();
+
+            if (!nameInput) {
+                showToast('Masukkan nama panggilanmu terlebih dahulu!', 'warning');
+                return;
+            }
+            if (codeInput.length !== 6) {
+                showToast('Kode ruangan harus 6 karakter!', 'warning');
+                return;
+            }
+
+            const room = getRoomData(codeInput);
+            if (!room) {
+                showToast(`Ruangan "${codeInput}" tidak ditemukan! Pastikan Guru sudah membuatnya di browser ini atau klik "Main Uji Coba Sekarang".`, 'error');
+                return;
+            }
+
+            currentRole = 'student';
+            currentRoomCode = codeInput;
+            currentStudentName = nameInput;
+            currentStudentId = 'STU_' + Math.random().toString(36).substring(2, 9);
+
+            room.students[currentStudentId] = {
+                id: currentStudentId,
+                name: currentStudentName,
+                height: 0,
+                points: 0,
+                finished: false
+            };
+            saveRoomData(currentRoomCode, room);
+
+            enterStudentGameView();
+        }
+
+        function startQuickSoloDemo() {
+            SoundFX.init();
+            const code = 'SOLO' + Math.floor(10 + Math.random() * 89);
+            const nameInput = document.getElementById('inputStudentName').value.trim() || 'Juara Kelas';
+
+            currentRole = 'student';
+            currentRoomCode = code;
+            currentStudentName = nameInput;
+            currentStudentId = 'SOLO_PLAYER';
+
+            const demoRoom = {
+                code: code,
+                status: 'playing',
+                durationSec: 180,
+                endTime: Date.now() + 180 * 1000,
+                questions: JSON.parse(JSON.stringify(DEFAULT_QUESTIONS)),
+                students: {
+                    [currentStudentId]: {
+                        id: currentStudentId,
+                        name: currentStudentName,
+                        height: 0,
+                        points: 0,
+                        finished: false
+                    },
+                    'BOT_1': { id: 'BOT_1', name: 'Rina (Bot)', height: 28, points: 2, finished: false },
+                    'BOT_2': { id: 'BOT_2', name: 'Dimas (Bot)', height: 15, points: 1, finished: false }
+                }
+            };
+            saveRoomData(code, demoRoom);
+            enterStudentGameView();
+            showToast('Mode Uji Coba Solo dimulai! Jawab soal untuk mendapat Poin Lompat!', 'success');
+        }
+
+        function enterStudentGameView() {
+            switchView('viewStudent');
+            document.getElementById('hudRoomCode').textContent = currentRoomCode;
+            document.getElementById('waitingRoomCode').textContent = currentRoomCode;
+            document.getElementById('waitingStudentName').textContent = currentStudentName;
+
+            initTowerGame();
+            syncStudentWithRoom();
+
+            if (syncInterval) clearInterval(syncInterval);
+            syncInterval = setInterval(syncStudentWithRoom, 500);
+        }
+
+        function syncStudentWithRoom() {
+            const room = getRoomData(currentRoomCode);
+            if (!room) return;
+
+            const waitOverlay = document.getElementById('studentWaitingOverlay');
+            if (room.status === 'waiting') {
+                waitOverlay.classList.remove('hidden');
+                GameState.paused = true;
+            } else {
+                waitOverlay.classList.add('hidden');
+                if (!document.getElementById('quizModal').classList.contains('hidden') ||
+                    !document.getElementById('endGameModal').classList.contains('hidden')) {
+                    GameState.paused = true;
+                } else {
+                    GameState.paused = false;
+                }
+            }
+
+            // Timer Update
+            if (room.status === 'playing' && room.endTime) {
+                const rem = Math.max(0, Math.ceil((room.endTime - Date.now()) / 1000));
+                document.getElementById('hudTimer').textContent = formatSeconds(rem);
+                if (rem <= 15) {
+                    document.getElementById('hudTimer').classList.add('text-rose-400', 'animate-pulse');
+                } else {
+                    document.getElementById('hudTimer').classList.remove('text-rose-400', 'animate-pulse');
+                }
+
+                if (rem === 0 && !GameState.gameEnded) {
+                    room.status = 'ended';
+                    saveRoomData(currentRoomCode, room);
+                    triggerEndGameModal(false);
+                }
+            } else if (room.status === 'ended' && !GameState.gameEnded) {
+                triggerEndGameModal(false);
+            }
+
+            // Simulate subtle bot movement in solo demo mode
+            if (room.code.startsWith('SOLO') && room.status === 'playing') {
+                ['BOT_1', 'BOT_2'].forEach(botId => {
+                    if (room.students[botId] && !room.students[botId].finished && Math.random() < 0.25) {
+                        room.students[botId].height = Math.min(98, room.students[botId].height + Math.floor(Math.random() * 3));
+                    }
+                });
+            }
+
+            // Push local student progress to room
+            if (room.students[currentStudentId]) {
+                room.students[currentStudentId].height = GameState.maxHeightMeters;
+                room.students[currentStudentId].points = GameState.jumpPoints;
+                room.students[currentStudentId].finished = GameState.reachedSummit;
+                saveRoomData(currentRoomCode, room);
+            }
+
+            // Compute Rank
+            const sorted = Object.values(room.students).sort((a, b) => b.height - a.height);
+            const myRank = sorted.findIndex(s => s.id === currentStudentId) + 1;
+            document.getElementById('hudRankText').textContent = `Peringkat #${myRank || 1} dari ${sorted.length}`;
+        }
+
+        /* ==========================================================================
+           7. QUIZ MODAL & MEME FEEDBACK LOGIC
+           ========================================================================== */
+        let currentQuestionObj = null;
+        let lastQuestionIdx = -1;
+
+        function openQuizModal() {
+            const room = getRoomData(currentRoomCode);
+            if (!room || !room.questions || room.questions.length === 0) {
+                showToast('Bank soal kosong!', 'error');
+                return;
+            }
+            if (room.status === 'waiting') {
+                showToast('Tunggu guru memulai permainan dulu ya!', 'warning');
+                return;
+            }
+
+            GameState.paused = true;
+            document.getElementById('quizModal').classList.remove('hidden');
+            loadRandomQuestionIntoModal();
+        }
+
+        function closeQuizModal() {
+            document.getElementById('quizModal').classList.add('hidden');
+            const room = getRoomData(currentRoomCode);
+            if (room && room.status === 'playing' && !GameState.gameEnded) {
+                GameState.paused = false;
+            }
+        }
+
+        function nextQuestionInModal() {
+            loadRandomQuestionIntoModal();
+        }
+
+        function loadRandomQuestionIntoModal() {
+            const room = getRoomData(currentRoomCode);
+            if (!room || room.questions.length === 0) return;
+
+            document.getElementById('quizMemeFeedback').classList.add('hidden');
+            document.getElementById('quizQuestionContainer').classList.remove('hidden');
+
+            let idx = Math.floor(Math.random() * room.questions.length);
+            if (room.questions.length > 1 && idx === lastQuestionIdx) {
+                idx = (idx + 1) % room.questions.length;
+            }
+            lastQuestionIdx = idx;
+            currentQuestionObj = room.questions[idx];
+
+            document.getElementById('modalQuestionText').textContent = currentQuestionObj.q;
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`quizOptText${i}`).textContent = currentQuestionObj.options[i];
+            }
+        }
+
+        function submitQuizAnswer(selectedIdx) {
+            if (!currentQuestionObj) return;
+            const isCorrect = (selectedIdx === currentQuestionObj.correct);
+
+            document.getElementById('quizQuestionContainer').classList.add('hidden');
+            const feedbackEl = document.getElementById('quizMemeFeedback');
+            feedbackEl.classList.remove('hidden');
+
+            const visualEl = document.getElementById('memeCardVisual');
+            const badgeEl = document.getElementById('memeBadge');
+            const headEl = document.getElementById('memeHeadline');
+            const subEl = document.getElementById('memeSubtext');
+
+            if (isCorrect) {
+                SoundFX.correct();
+                GameState.jumpPoints += 2;
+                updatePointsHUD();
+
+                const meme = MEMES_CORRECT[Math.floor(Math.random() * MEMES_CORRECT.length)];
+                visualEl.className = `mx-auto w-40 h-40 rounded-3xl bg-gradient-to-br ${meme.bg} flex items-center justify-center mb-4 border-4 shadow-2xl`;
+                visualEl.innerHTML = meme.svg;
+                badgeEl.className = 'inline-block px-4 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2 bg-emerald-500/20 text-emerald-300 border border-emerald-400/40';
+                badgeEl.textContent = meme.badge;
+                headEl.textContent = meme.headline;
+                headEl.className = 'font-display text-2xl sm:text-3xl font-bold text-emerald-300 mb-1';
+                subEl.textContent = meme.subtext;
+            } else {
+                SoundFX.wrong();
+                const meme = MEMES_WRONG[Math.floor(Math.random() * MEMES_WRONG.length)];
+                visualEl.className = `mx-auto w-40 h-40 rounded-3xl bg-gradient-to-br ${meme.bg} flex items-center justify-center mb-4 border-4 shadow-2xl`;
+                visualEl.innerHTML = meme.svg;
+                badgeEl.className = 'inline-block px-4 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2 bg-rose-500/20 text-rose-300 border border-rose-400/40';
+                badgeEl.textContent = meme.badge;
+                headEl.textContent = meme.headline;
+                headEl.className = 'font-display text-2xl sm:text-3xl font-bold text-rose-300 mb-1';
+                subEl.textContent = meme.subtext;
+            }
+
+            syncStudentWithRoom();
+        }
+
+        /* ==========================================================================
+           8. TOWER OF HELL 2D HTML5 CANVAS PLATFORMER ENGINE
+           ========================================================================== */
+        let canvas, ctx;
+        let animFrameId = null;
+
+        const TOWER_CONFIG = {
+            virtualWidth: 800,
+            totalPlatforms: 25, // 25 tingkat menara -> 100 meter
+            platformSpacingY: 115,
+            gravity: 0.58,
+            moveSpeed: 5.4,
+            jumpVelocity: -14.8
+        };
+
+        const GameState = {
+            paused: false,
+            gameEnded: false,
+            jumpPoints: 0,
+            maxHeightMeters: 0,
+            reachedSummit: false,
+            cameraY: 0,
+            lavaY: 140,
+            platforms: [],
+            particles: [],
+            player: {
+                x: 380,
+                y: 0,
+                w: 34,
+                h: 42,
+                vx: 0,
+                vy: 0,
+                onGround: false,
+                facing: 1,
+                color: '#38bdf8'
+            },
+            checkpoint: {
+                x: 380,
+                y: 0,
+                index: 0
+            },
+            keys: {
+                left: false,
+                right: false
+            }
+        };
+
+        function initTowerGame() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            GameState.paused = false;
+            GameState.gameEnded = false;
+            GameState.jumpPoints = 0;
+            GameState.maxHeightMeters = 0;
+            GameState.reachedSummit = false;
+            GameState.particles = [];
+
+            buildTowerPlatforms();
+
+            // Place player on Base Platform (index 0)
+            const base = GameState.platforms[0];
+            GameState.player.x = base.x + base.w / 2 - GameState.player.w / 2;
+            GameState.player.y = base.y - GameState.player.h;
+            GameState.player.vx = 0;
+            GameState.player.vy = 0;
+            GameState.player.onGround = true;
+
+            GameState.checkpoint = {
+                x: GameState.player.x,
+                y: GameState.player.y,
+                index: 0
+            };
+
+            GameState.cameraY = GameState.player.y - 450;
+            GameState.lavaY = base.y + 130;
+
+            updatePointsHUD();
+            updateHeightHUD();
+            document.getElementById('btnRespawn').classList.remove('respawn-urgent');
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+            gameLoop();
+        }
+
+        function stopGameLoop() {
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+            animFrameId = null;
+        }
+
+        function resizeCanvas() {
+            if (!canvas) return;
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
+
+        function buildTowerPlatforms() {
+            const plats = [];
+            const neonPalette = [
+                { fill: '#ec4899', glow: '#f472b6' }, // Pink Neon
+                { fill: '#06b6d4', glow: '#22d3ee' }, // Cyan Neon
+                { fill: '#a855f7', glow: '#c084fc' }, // Purple Neon
+                { fill: '#f59e0b', glow: '#fbbf24' }, // Amber Neon
+                { fill: '#10b981', glow: '#34d399' }  // Emerald Checkpoint
+            ];
+
+            // Platform 0: Wide Starting Floor
+            plats.push({
+                index: 0,
+                x: 120,
+                y: 0,
+                w: 560,
+                h: 26,
+                type: 'start',
+                color: '#6366f1',
+                glow: '#818cf8',
+                vx: 0
+            });
+
+            let prevX = 330;
+            for (let i = 1; i <= TOWER_CONFIG.totalPlatforms; i++) {
+                const y = -i * TOWER_CONFIG.platformSpacingY;
+                const isSummit = (i === TOWER_CONFIG.totalPlatforms);
+                const isCheckpoint = (!isSummit && i % 5 === 0);
+
+                let w = isSummit ? 480 : (isCheckpoint ? 240 : Math.max(125, 195 - i * 2));
+                // Ensure reachable horizontal gap from previous platform
+                const maxShift = 210;
+                let minX = Math.max(70, prevX - maxShift);
+                let maxX = Math.min(TOWER_CONFIG.virtualWidth - 70 - w, prevX + maxShift);
+                let x = isSummit ? (TOWER_CONFIG.virtualWidth - w) / 2 : (minX + Math.random() * Math.max(10, maxX - minX));
+                prevX = x;
+
+                const theme = isSummit
+                    ? { fill: '#facc15', glow: '#fef08a' }
+                    : isCheckpoint
+                        ? neonPalette[4]
+                        : neonPalette[i % 4];
+
+                // Add gentle moving platforms at higher levels (non-checkpoint)
+                let vx = 0;
+                if (!isSummit && !isCheckpoint && i >= 7 && i % 3 === 0) {
+                    vx = (i % 2 === 0 ? 1 : -1) * (1.2 + Math.min(1.5, i * 0.05));
+                }
+
+                plats.push({
+                    index: i,
+                    x,
+                    y,
+                    w,
+                    h: isSummit ? 30 : 20,
+                    type: isSummit ? 'summit' : (isCheckpoint ? 'checkpoint' : 'normal'),
+                    color: theme.fill,
+                    glow: theme.glow,
+                    vx,
+                    checkpointReached: false
+                });
+            }
+            GameState.platforms = plats;
+        }
+
+        function attemptPlayerJump() {
+            if (GameState.paused || GameState.gameEnded) return;
+            const p = GameState.player;
+
+            // Only allow jump when standing on a platform
+            if (!p.onGround) return;
+
+            if (GameState.jumpPoints <= 0) {
+                SoundFX.noPoints();
+                showToast('Poin lompat habis (0)! Jawab soal dulu untuk dapat +2 Poin!', 'warning');
+                openQuizModal();
+                return;
+            }
+
+            // Consume 1 Jump Point!
+            GameState.jumpPoints -= 1;
+            updatePointsHUD();
+
+            p.vy = TOWER_CONFIG.jumpVelocity;
+            p.onGround = false;
+            SoundFX.jump();
+            spawnParticles(p.x + p.w / 2, p.y + p.h, '#38bdf8', 12);
+            syncStudentWithRoom();
+        }
+
+        function triggerRespawn() {
+            SoundFX.respawn();
+            const p = GameState.player;
+            p.x = GameState.checkpoint.x;
+            p.y = GameState.checkpoint.y - 4;
+            p.vx = 0;
+            p.vy = 0;
+            p.onGround = false;
+
+            document.getElementById('btnRespawn').classList.remove('respawn-urgent');
+            spawnParticles(p.x + p.w / 2, p.y + p.h / 2, '#f43f5e', 18);
+            showToast(`Respawn ke Checkpoint #${GameState.checkpoint.index / 5} berhasil! Poin lompatmu tetap aman.`, 'info');
+        }
+
+        function spawnParticles(x, y, color, count = 10) {
+            for (let i = 0; i < count; i++) {
+                GameState.particles.push({
+                    x,
+                    y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.8) * 6,
+                    life: 1,
+                    color,
+                    size: 3 + Math.random() * 4
+                });
+            }
+        }
+
+        function updatePointsHUD() {
+            const el = document.getElementById('hudJumpPoints');
+            el.textContent = GameState.jumpPoints;
+            const box = document.getElementById('hudPointsBox');
+            if (GameState.jumpPoints === 0) {
+                box.classList.add('border-rose-400');
+                box.classList.remove('border-amber-400/60');
+            } else {
+                box.classList.remove('border-rose-400');
+                box.classList.add('border-amber-400/60');
+            }
+        }
+
+        function updateHeightHUD() {
+            const summitY = Math.abs(GameState.platforms[GameState.platforms.length - 1].y);
+            const currentY = Math.max(0, -GameState.player.y);
+            const meters = Math.min(100, Math.round((currentY / summitY) * 100));
+            if (meters > GameState.maxHeightMeters) {
+                GameState.maxHeightMeters = meters;
+            }
+            document.getElementById('hudHeightText').textContent = `${meters}m`;
+            document.getElementById('hudProgressBar').style.width = `${meters}%`;
+        }
+
+        function updatePhysics() {
+            if (GameState.paused || GameState.gameEnded) return;
+
+            const p = GameState.player;
+
+            // Update Moving Platforms
+            GameState.platforms.forEach(plat => {
+                if (plat.vx !== 0) {
+                    plat.x += plat.vx;
+                    if (plat.x < 65 || plat.x + plat.w > TOWER_CONFIG.virtualWidth - 65) {
+                        plat.vx *= -1;
+                    }
+                }
+            });
+
+            // Horizontal Movement (Free!)
+            if (GameState.keys.left) {
+                p.vx = -TOWER_CONFIG.moveSpeed;
+                p.facing = -1;
+            } else if (GameState.keys.right) {
+                p.vx = TOWER_CONFIG.moveSpeed;
+                p.facing = 1;
+            } else {
+                p.vx *= 0.78;
+                if (Math.abs(p.vx) < 0.1) p.vx = 0;
+            }
+
+            const prevY = p.y;
+            p.x += p.vx;
+            p.vy += TOWER_CONFIG.gravity;
+            p.y += p.vy;
+
+            // Tower Walls Bounds
+            if (p.x < 55) p.x = 55;
+            if (p.x + p.w > TOWER_CONFIG.virtualWidth - 55) p.x = TOWER_CONFIG.virtualWidth - 55 - p.w;
+
+            // One-way Platform Landing Collision (When falling downwards)
+            p.onGround = false;
+            if (p.vy >= 0) {
+                for (let plat of GameState.platforms) {
+                    const prevBottom = prevY + p.h;
+                    const currBottom = p.y + p.h;
+                    const withinX = (p.x + p.w - 6 > plat.x) && (p.x + 6 < plat.x + plat.w);
+
+                    if (withinX && prevBottom <= plat.y + 10 && currBottom >= plat.y) {
+                        p.y = plat.y - p.h;
+                        p.vy = 0;
+                        p.onGround = true;
+                        p.x += plat.vx; // Carry player on moving platform
+
+                        // Check if Checkpoint
+                        if (plat.type === 'checkpoint' && !plat.checkpointReached) {
+                            plat.checkpointReached = true;
+                            GameState.checkpoint = {
+                                x: plat.x + plat.w / 2 - p.w / 2,
+                                y: plat.y - p.h,
+                                index: plat.index
+                            };
+                            SoundFX.checkpoint();
+                            spawnParticles(p.x + p.w / 2, p.y + p.h, '#34d399', 22);
+                            const banner = document.getElementById('checkpointBanner');
+                            banner.classList.remove('hidden');
+                            setTimeout(() => banner.classList.add('hidden'), 2200);
+                        }
+
+                        // Check if Summit Reached!
+                        if (plat.type === 'summit' && !GameState.reachedSummit) {
+                            GameState.reachedSummit = true;
+                            GameState.maxHeightMeters = 100;
+                            syncStudentWithRoom();
+                            triggerEndGameModal(true);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Highlight Respawn button if player falls significantly below their checkpoint
+            if (p.y > GameState.checkpoint.y + 180) {
+                document.getElementById('btnRespawn').classList.add('respawn-urgent');
+            }
+
+            // Auto-Respawn if fallen into the Void / Lava Pit at the bottom
+            if (p.y > GameState.lavaY) {
+                showToast('Ups, terjatuh ke zona lava! Otomatis Respawn ke Checkpoint terakhir.', 'warning');
+                triggerRespawn();
+            }
+
+            // Smooth Camera Follow
+            const targetCamY = p.y - 360;
+            GameState.cameraY += (targetCamY - GameState.cameraY) * 0.1;
+
+            // Update Particles
+            for (let i = GameState.particles.length - 1; i >= 0; i--) {
+                const pt = GameState.particles[i];
+                pt.x += pt.vx;
+                pt.y += pt.vy;
+                pt.life -= 0.035;
+                if (pt.life <= 0) GameState.particles.splice(i, 1);
+            }
+
+            updateHeightHUD();
+        }
+
+        function drawTowerScene() {
+            if (!ctx) return;
+            const W = canvas.width;
+            const H = canvas.height;
+
+            // Clear Background with Deep Tower Gradient
+            const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+            bgGrad.addColorStop(0, '#090d16');
+            bgGrad.addColorStop(0.5, '#1e1b4b');
+            bgGrad.addColorStop(1, '#0f172a');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, W, H);
+
+            // Calculate scale so virtualWidth (800) fits nicely on any screen
+            const scale = Math.min(W / TOWER_CONFIG.virtualWidth, 1.15);
+            const offsetX = (W - TOWER_CONFIG.virtualWidth * scale) / 2;
+
+            ctx.save();
+            ctx.translate(offsetX, -GameState.cameraY * scale + (H * 0.18));
+            ctx.scale(scale, scale);
+
+            // Draw Tower Interior Walls & Grid Lines
+            const topY = -TOWER_CONFIG.totalPlatforms * TOWER_CONFIG.platformSpacingY - 250;
+            const botY = 250;
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.65)';
+            ctx.fillRect(50, topY, TOWER_CONFIG.virtualWidth - 100, botY - topY);
+
+            // Neon Tower Pillars (Left & Right Borders)
+            ctx.fillStyle = '#312e81';
+            ctx.fillRect(42, topY, 12, botY - topY);
+            ctx.fillRect(TOWER_CONFIG.virtualWidth - 54, topY, 12, botY - topY);
+
+            // Height Markers every 5 levels
+            ctx.font = 'bold 14px Fredoka, sans-serif';
+            ctx.fillStyle = 'rgba(148, 163, 184, 0.35)';
+            for (let i = 0; i <= TOWER_CONFIG.totalPlatforms; i += 5) {
+                const y = -i * TOWER_CONFIG.platformSpacingY;
+                const m = Math.round((i / TOWER_CONFIG.totalPlatforms) * 100);
+                ctx.fillText(`${m}m`, 68, y - 6);
+                ctx.fillRect(65, y, TOWER_CONFIG.virtualWidth - 130, 1);
+            }
+
+            // Draw Platforms
+            GameState.platforms.forEach(plat => {
+                ctx.save();
+                ctx.shadowColor = plat.glow;
+                ctx.shadowBlur = 14;
+                ctx.fillStyle = plat.color;
+
+                // Rounded Platform Rect
+                roundRect(ctx, plat.x, plat.y, plat.w, plat.h, 8);
+                ctx.fill();
+
+                // Top Highlight Strip
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = 'rgba(255,255,255,0.35)';
+                roundRect(ctx, plat.x + 4, plat.y + 2, plat.w - 8, 5, 3);
+                ctx.fill();
+
+                // Checkpoint Flag Visual
+                if (plat.type === 'checkpoint') {
+                    const flagX = plat.x + plat.w / 2;
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.fillRect(flagX - 2, plat.y - 38, 4, 38);
+                    ctx.fillStyle = plat.checkpointReached ? '#10b981' : '#f43f5e';
+                    ctx.beginPath();
+                    ctx.moveTo(flagX + 2, plat.y - 38);
+                    ctx.lineTo(flagX + 26, plat.y - 29);
+                    ctx.lineTo(flagX + 2, plat.y - 20);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.font = 'bold 11px Plus Jakarta Sans, sans-serif';
+                    ctx.fillStyle = '#ecfdf5';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`CHECKPOINT ${plat.index / 5}`, flagX, plat.y + 14);
+                }
+
+                // Summit Crown / Trophy Visual
+                if (plat.type === 'summit') {
+                    ctx.font = '36px serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('🏆', plat.x + plat.w / 2, plat.y - 16);
+                    ctx.font = 'bold 14px Fredoka, sans-serif';
+                    ctx.fillStyle = '#0f172a';
+                    ctx.fillText('GARIS FINIS • PUNCAK MENARA', plat.x + plat.w / 2, plat.y + 20);
+                }
+                ctx.restore();
+            });
+
+            // Draw Lava / Void Pit at Bottom
+            const lavaGrad = ctx.createLinearGradient(0, GameState.lavaY, 0, GameState.lavaY + 120);
+            lavaGrad.addColorStop(0, 'rgba(244, 63, 94, 0.85)');
+            lavaGrad.addColorStop(1, 'rgba(136, 19, 55, 0.95)');
+            ctx.fillStyle = lavaGrad;
+            ctx.fillRect(50, GameState.lavaY, TOWER_CONFIG.virtualWidth - 100, 160);
+
+            // Draw Particles
+            GameState.particles.forEach(pt => {
+                ctx.globalAlpha = Math.max(0, pt.life);
+                ctx.fillStyle = pt.color;
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+            // Draw Player Character (Roblox-inspired Cute Blocky Avatar)
+            const p = GameState.player;
+            ctx.save();
+            // Body
+            ctx.fillStyle = '#38bdf8';
+            roundRect(ctx, p.x + 3, p.y + 16, p.w - 6, p.h - 16, 6);
+            ctx.fill();
+            // Head
+            ctx.fillStyle = '#fde047';
+            roundRect(ctx, p.x + 4, p.y, p.w - 8, 18, 6);
+            ctx.fill();
+            // Eyes
+            ctx.fillStyle = '#0f172a';
+            const eyeOffset = p.facing === 1 ? 6 : -2;
+            ctx.fillRect(p.x + 11 + eyeOffset, p.y + 6, 3.5, 4.5);
+            ctx.fillRect(p.x + 18 + eyeOffset, p.y + 6, 3.5, 4.5);
+
+            // Player Name Tag above Avatar
+            ctx.font = 'bold 12px Plus Jakarta Sans, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(currentStudentName, p.x + p.w / 2, p.y - 8);
+            ctx.restore();
+
+            ctx.restore();
+        }
+
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+
+        function gameLoop() {
+            updatePhysics();
+            drawTowerScene();
+            animFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        /* ==========================================================================
+           9. END GAME / VICTORY MODAL
+           ========================================================================== */
+        function triggerEndGameModal(isVictory) {
+            GameState.gameEnded = true;
+            GameState.paused = true;
+            document.getElementById('quizModal').classList.add('hidden');
+            const modal = document.getElementById('endGameModal');
+            modal.classList.remove('hidden');
+
+            if (isVictory) {
+                SoundFX.victory();
+                document.getElementById('endGameTrophy').textContent = '🏆';
+                document.getElementById('endGameTitle').textContent = 'PUNCAK TERCAPAI!';
+                document.getElementById('endGameSubtitle').textContent = `Selamat ${currentStudentName}! Kamu berhasil menaklukkan Tower of Quiz setinggi 100m!`;
+            } else {
+                SoundFX.checkpoint();
+                document.getElementById('endGameTrophy').textContent = '⏰';
+                document.getElementById('endGameTitle').textContent = 'WAKTU HABIS!';
+                document.getElementById('endGameSubtitle').textContent = `Permainan selesai! Ketinggian tertinggimu adalah ${GameState.maxHeightMeters}m.`;
+            }
+
+            const room = getRoomData(currentRoomCode);
+            const listEl = document.getElementById('endGameLeaderboard');
+            if (room && room.students) {
+                const sorted = Object.values(room.students).sort((a, b) => b.height - a.height);
+                listEl.innerHTML = sorted.map((st, idx) => `
+                    <div class="flex items-center justify-between px-3 py-2 rounded-xl ${st.id === currentStudentId ? 'bg-indigo-500/20 border border-indigo-400/50' : 'bg-slate-900'}">
+                        <div class="flex items-center gap-2">
+                            <span class="font-display font-bold text-amber-300 w-5">#${idx + 1}</span>
+                            <span class="font-bold text-sm text-white">${escapeHtml(st.name)}</span>
+                        </div>
+                        <span class="font-display font-bold text-emerald-400 text-sm">${st.height}m</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function replayOrContinue() {
+            document.getElementById('endGameModal').classList.add('hidden');
+            if (currentRoomCode && currentRoomCode.startsWith('SOLO')) {
+                startQuickSoloDemo();
+            } else {
+                initTowerGame();
+            }
+        }
+
+        /* ==========================================================================
+           10. KEYBOARD & TOUCH EVENT LISTENERS
+           ========================================================================== */
+        window.addEventListener('keydown', (e) => {
+            if (currentRole !== 'student') return;
+            const quizOpen = !document.getElementById('quizModal').classList.contains('hidden');
+
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+                GameState.keys.left = true;
+            }
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+                GameState.keys.right = true;
+            }
+            if ((e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') && !quizOpen) {
+                e.preventDefault();
+                attemptPlayerJump();
+            }
+            if (e.code === 'KeyR' && !quizOpen) {
+                triggerRespawn();
+            }
+            if ((e.code === 'KeyQ' || e.code === 'Enter') && !quizOpen) {
+                openQuizModal();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+                GameState.keys.left = false;
+            }
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+                GameState.keys.right = false;
+            }
+        });
+
+        // Mobile Touch Controls Binding
+        function bindTouchHold(btnId, keyName) {
+            const btn = document.getElementById(btnId);
+            if (!btn) return;
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); GameState.keys[keyName] = true; }, { passive: false });
+            btn.addEventListener('touchend', (e) => { e.preventDefault(); GameState.keys[keyName] = false; }, { passive: false });
+            btn.addEventListener('mousedown', () => { GameState.keys[keyName] = true; });
+            btn.addEventListener('mouseup', () => { GameState.keys[keyName] = false; });
+            btn.addEventListener('mouseleave', () => { GameState.keys[keyName] = false; });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            bindTouchHold('touchLeft', 'left');
+            bindTouchHold('touchRight', 'right');
+            const jumpBtn = document.getElementById('touchJump');
+            if (jumpBtn) {
+                jumpBtn.addEventListener('touchstart', (e) => { e.preventDefault(); attemptPlayerJump(); }, { passive: false });
+                jumpBtn.addEventListener('click', () => attemptPlayerJump());
+            }
+        });
+
+        /* ==========================================================================
+           11. UTILITIES
+           ========================================================================== */
+        function formatSeconds(totalSec) {
+            const m = Math.floor(totalSec / 60);
+            const s = totalSec % 60;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
